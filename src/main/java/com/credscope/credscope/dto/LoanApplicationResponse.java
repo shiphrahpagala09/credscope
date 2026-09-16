@@ -2,6 +2,7 @@ package com.credscope.credscope.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class LoanApplicationResponse {
 	  private Long id;
@@ -10,7 +11,10 @@ public class LoanApplicationResponse {
 	    private String purpose;
 	    private String status;
 	    private Integer riskScore;
+	    private String riskCategory;
+	    private List<String> riskFactors;
 	    private LocalDateTime createdAt;
+
 		public Long getId() {
 			return id;
 		}
@@ -52,6 +56,19 @@ public class LoanApplicationResponse {
 		}
 		public void setCreatedAt(LocalDateTime createdAt) {
 			this.createdAt = createdAt;
+		}
+		public List<String> getRiskFactors() {
+			return riskFactors;
+		}
+		public void setRiskFactors(List<String> riskFactors) {
+			this.riskFactors = riskFactors;
+		}
+		public String getRiskCategory() {
+		    return riskCategory;
+		}
+
+		public void setRiskCategory(String riskCategory) {
+		    this.riskCategory = riskCategory;
 		}
 	    
 
