@@ -23,6 +23,8 @@ public class LoanApplicationService {
     private LoanApplicationRepository loanApplicationRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RiskAssessmentService riskAssessmentService;
      
     public LoanApplicationResponse  createApplication(LoanApplicationRequest request,String applicantEmail) {
     	User applicant = userRepository.findByEmail(applicantEmail)
@@ -37,6 +39,8 @@ public class LoanApplicationService {
         application.setStatus(ApplicationStatus.SUBMITTED);
         application.setCreatedAt(LocalDateTime.now());
         application.setUpdatedAt(LocalDateTime.now());
+        Integer riskScore = riskAssessmentService.calculateRiskScore(application);
+        application.setRiskScore(riskScore);
         
         LoanApplication saved =loanApplicationRepository.save(application);
         
