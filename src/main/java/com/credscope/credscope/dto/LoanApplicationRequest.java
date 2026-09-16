@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 public class LoanApplicationRequest {
-	@NotNull
-	private Long applicantId; // temporary — will be replaced by logged-in user once auth exists
+//	@NotNull
+//	private Long applicantId; // temporary — will be replaced by logged-in user once auth exists
 	@NotNull
 	@Positive
 	private BigDecimal loanAmount;
@@ -23,12 +23,12 @@ public class LoanApplicationRequest {
     private BigDecimal existingEmi;
 	@NotNull
     private String employmentType;
-	public Long getApplicantId() {
-		return applicantId;
-	}
-	public void setApplicantId(Long applicantId) {
-		this.applicantId = applicantId;
-	}
+//	public Long getApplicantId() {
+//		return applicantId;
+//	}
+//	public void setApplicantId(Long applicantId) {
+//		this.applicantId = applicantId;
+//	}
 	public BigDecimal getLoanAmount() {
 		return loanAmount;
 	}

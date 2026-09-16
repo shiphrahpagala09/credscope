@@ -28,8 +28,8 @@ public class LoanApplicationController {
 	
 	@PreAuthorize("hasRole('APPLICANT')")
 	@PostMapping
-    public LoanApplicationResponse createApplication(@Valid @RequestBody LoanApplicationRequest request) {
-        return loanApplicationService.createApplication(request);
+    public LoanApplicationResponse createApplication(@Valid @RequestBody LoanApplicationRequest request, Authentication authentication) {
+        return loanApplicationService.createApplication(request,authentication.getName());
     }
 	@PreAuthorize("hasAnyRole('UNDERWRITER','ADMIN')")
 	@GetMapping

@@ -24,9 +24,9 @@ public class LoanApplicationService {
     @Autowired
     private UserRepository userRepository;
      
-    public LoanApplicationResponse  createApplication(LoanApplicationRequest request) {
-    	User applicant = userRepository.findById(request.getApplicantId()).orElseThrow(() -> new RuntimeException("Applicant not found"));
-    	
+    public LoanApplicationResponse  createApplication(LoanApplicationRequest request,String applicantEmail) {
+    	User applicant = userRepository.findByEmail(applicantEmail)
+    	        .orElseThrow(() -> new RuntimeException("Applicant not found"));    	
     	LoanApplication application = new LoanApplication();
     	application.setApplicant(applicant);
         application.setLoanAmount(request.getLoanAmount());
