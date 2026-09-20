@@ -13,6 +13,7 @@ public class LoanApplicationResponse {
 	    private Integer riskScore;
 	    private String riskCategory;
 	    private List<String> riskFactors;
+	    private String aiRiskExplanation;
 	    private LocalDateTime createdAt;
 
 		public Long getId() {
@@ -70,6 +71,12 @@ public class LoanApplicationResponse {
 		public void setRiskCategory(String riskCategory) {
 		    this.riskCategory = riskCategory;
 		}
-	    
+		public String getAiRiskExplanation() {
+		    return aiRiskExplanation;
+		}
+
+		public void setAiRiskExplanation(String aiRiskExplanation) {
+		    this.aiRiskExplanation = aiRiskExplanation;
+		}
 
 }

@@ -34,6 +34,9 @@ public class LoanApplicationService {
     @Autowired
     private RiskAssessmentRepository riskAssessmentRepository;
 
+    @Autowired
+    private AiRiskExplanationService aiRiskExplanationService;
+    
     public LoanApplicationResponse createApplication(
             LoanApplicationRequest request,
             String applicantEmail) {
@@ -84,6 +87,15 @@ public class LoanApplicationService {
         /*
          * Save the calculated score back to the loan application.
          */
+        String aiExplanation =
+                aiRiskExplanationService.generateExplanation(
+                        saved,
+                        riskScore,
+                        riskCategory,
+                        riskFactors
+                );
+
+        saved.setAiRiskExplanation(aiExplanation);
         saved.setUpdatedAt(LocalDateTime.now());
         saved = loanApplicationRepository.save(saved);
 
@@ -142,6 +154,9 @@ public class LoanApplicationService {
 
         response.setRiskFactors(
                 riskAssessmentService.getRiskFactors(saved)
+        );
+        response.setAiRiskExplanation(
+                saved.getAiRiskExplanation()
         );
 
         response.setCreatedAt(saved.getCreatedAt());
