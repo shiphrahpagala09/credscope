@@ -175,14 +175,49 @@ public class LoanApplicationService {
                                 () -> new RuntimeException("Application not found")
                         );
 
-        ApplicationStatus status =
-                ApplicationStatus.valueOf(newStatus);
+        ApplicationStatus currentStatus = application.getStatus();
+        ApplicationStatus newApplicationStatus;
 
-        application.setStatus(status);
+        try {
+            newApplicationStatus = ApplicationStatus.valueOf(newStatus);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid application status: " + newStatus);
+        }
+
+        // SUBMITTED -> UNDER_REVIEW only
+        if (currentStatus == ApplicationStatus.SUBMITTED
+                && newApplicationStatus != ApplicationStatus.UNDER_REVIEW) {
+
+            throw new RuntimeException(
+                    "A SUBMITTED application can only move to UNDER_REVIEW"
+            );
+        }
+
+        // UNDER_REVIEW -> APPROVED or REJECTED only
+        if (currentStatus == ApplicationStatus.UNDER_REVIEW
+                && newApplicationStatus != ApplicationStatus.APPROVED
+                && newApplicationStatus != ApplicationStatus.REJECTED) {
+
+            throw new RuntimeException(
+                    "An UNDER_REVIEW application can only be APPROVED or REJECTED"
+            );
+        }
+
+        // Final states cannot be changed
+        if (currentStatus == ApplicationStatus.APPROVED
+                || currentStatus == ApplicationStatus.REJECTED) {
+
+            throw new RuntimeException(
+                    "An approved or rejected application cannot be changed"
+            );
+        }
+
+        application.setStatus(newApplicationStatus);
         application.setUpdatedAt(LocalDateTime.now());
 
-        if (status == ApplicationStatus.APPROVED
-                || status == ApplicationStatus.REJECTED) {
+        // Store the underwriter who made the final decision
+        if (newApplicationStatus == ApplicationStatus.APPROVED
+                || newApplicationStatus == ApplicationStatus.REJECTED) {
 
             User underwriter =
                     userRepository.findByEmail(underwriterEmail)
@@ -196,8 +231,9 @@ public class LoanApplicationService {
             application.setDecidedAt(LocalDateTime.now());
         }
 
-        return toResponse(
-                loanApplicationRepository.save(application)
-        );
+        LoanApplication updated =
+                loanApplicationRepository.save(application);
+
+        return toResponse(updated);
     }
 }
