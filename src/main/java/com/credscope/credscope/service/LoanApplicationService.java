@@ -18,7 +18,8 @@ import com.credscope.credscope.entity.User;
 import com.credscope.credscope.repository.LoanApplicationRepository;
 import com.credscope.credscope.repository.RiskAssessmentRepository;
 import com.credscope.credscope.repository.UserRepository;
-
+import com.credscope.credscope.entity.ApplicationStatusHistory;
+import com.credscope.credscope.repository.ApplicationStatusHistoryRepository;
 @Service
 public class LoanApplicationService {
 
@@ -36,6 +37,9 @@ public class LoanApplicationService {
 
     @Autowired
     private AiRiskExplanationService aiRiskExplanationService;
+    
+    @Autowired
+    private ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
     
     public LoanApplicationResponse createApplication(
             LoanApplicationRequest request,
@@ -175,17 +179,20 @@ public class LoanApplicationService {
                                 () -> new RuntimeException("Application not found")
                         );
 
-        ApplicationStatus currentStatus = application.getStatus();
+        ApplicationStatus oldStatus = application.getStatus();
+
         ApplicationStatus newApplicationStatus;
 
         try {
             newApplicationStatus = ApplicationStatus.valueOf(newStatus);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid application status: " + newStatus);
+            throw new RuntimeException(
+                    "Invalid application status: " + newStatus
+            );
         }
 
         // SUBMITTED -> UNDER_REVIEW only
-        if (currentStatus == ApplicationStatus.SUBMITTED
+        if (oldStatus == ApplicationStatus.SUBMITTED
                 && newApplicationStatus != ApplicationStatus.UNDER_REVIEW) {
 
             throw new RuntimeException(
@@ -194,7 +201,7 @@ public class LoanApplicationService {
         }
 
         // UNDER_REVIEW -> APPROVED or REJECTED only
-        if (currentStatus == ApplicationStatus.UNDER_REVIEW
+        if (oldStatus == ApplicationStatus.UNDER_REVIEW
                 && newApplicationStatus != ApplicationStatus.APPROVED
                 && newApplicationStatus != ApplicationStatus.REJECTED) {
 
@@ -203,29 +210,29 @@ public class LoanApplicationService {
             );
         }
 
-        // Final states cannot be changed
-        if (currentStatus == ApplicationStatus.APPROVED
-                || currentStatus == ApplicationStatus.REJECTED) {
+        // Finalized applications cannot change
+        if (oldStatus == ApplicationStatus.APPROVED
+                || oldStatus == ApplicationStatus.REJECTED) {
 
             throw new RuntimeException(
                     "An approved or rejected application cannot be changed"
             );
         }
 
+        User underwriter =
+                userRepository.findByEmail(underwriterEmail)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Underwriter not found"
+                                )
+                        );
+
         application.setStatus(newApplicationStatus);
         application.setUpdatedAt(LocalDateTime.now());
 
-        // Store the underwriter who made the final decision
+        // Record final decision information
         if (newApplicationStatus == ApplicationStatus.APPROVED
                 || newApplicationStatus == ApplicationStatus.REJECTED) {
-
-            User underwriter =
-                    userRepository.findByEmail(underwriterEmail)
-                            .orElseThrow(
-                                    () -> new RuntimeException(
-                                            "Underwriter not found"
-                                    )
-                            );
 
             application.setDecidedBy(underwriter);
             application.setDecidedAt(LocalDateTime.now());
@@ -233,6 +240,18 @@ public class LoanApplicationService {
 
         LoanApplication updated =
                 loanApplicationRepository.save(application);
+
+        // Create audit/history record
+        ApplicationStatusHistory history =
+                new ApplicationStatusHistory();
+
+        history.setLoanApplication(updated);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newApplicationStatus);
+        history.setChangedBy(underwriter);
+        history.setChangedAt(LocalDateTime.now());
+
+        applicationStatusHistoryRepository.save(history);
 
         return toResponse(updated);
     }
