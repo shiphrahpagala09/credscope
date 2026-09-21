@@ -48,5 +48,14 @@ public class LoanApplicationController {
 	        Authentication authentication) {
 	    return loanApplicationService.updateStatus(id, request.getStatus(), authentication.getName());
 	}
+	@PreAuthorize("hasRole('APPLICANT')")
+	@GetMapping("/my")
+	public List<LoanApplicationResponse> getMyApplications(
+	        Authentication authentication) {
+
+	    return loanApplicationService.getMyApplications(
+	            authentication.getName()
+	    );
+	}
 
 }

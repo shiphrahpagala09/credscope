@@ -255,4 +255,12 @@ public class LoanApplicationService {
 
         return toResponse(updated);
     }
+    public List<LoanApplicationResponse> getMyApplications(String applicantEmail) {
+
+        return loanApplicationRepository
+                .findByApplicantEmail(applicantEmail)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
 }
